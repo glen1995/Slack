@@ -25,7 +25,7 @@ SECRET_KEY = '$u8chwiw)6sd6ubygyz28+)%dw)sbnla_3!5$n*0_0jl-lrcg-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['f0c5e34a.ngrok.io','127.0.0.1']
+ALLOWED_HOSTS = ['9a5f36e6.ngrok.io','127.0.0.1']
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'events',   
+    'votingapp',
     'accounts.apps.AccountsConfig',
 ]
 
@@ -131,4 +132,4 @@ LOGOUT_REDIRECT_URL = 'home'
 SLACK_CLIENT_ID = '575022529617.575022790945'
 SLACK_CLIENT_SECRET = '8708603f957fea4b718a7f4f5a4b893a'
 SLACK_VERIFICATION_TOKEN = 'SSQNgJGn17bobuyeDnw0hMNa'
-SLACK_BOT_USER_TOKEN = 'xoxb-575022529617-583483575811-9CCyjPJIZ4xBK37iHh01bBZG'
+SLACK_BOT_USER_TOKEN = 'xoxb-575022529617-583483575811-tQ6zcGrUUU5l4dLrtRwA5JaN'
