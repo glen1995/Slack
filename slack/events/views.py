@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from votingapp.models import Songs
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,50 +17,45 @@ def get_youtube_link(event_message):
     if 'message' in event_message:
         if 'attachments' in event_message['message']:
             attachments = event_message['message']['attachments']
-            urls = [attachment.get('title_link') for attachment in attachments if attachment.get('service_name') == 'YouTube']
-            youtube_urls.extend(urls)
-        print(youtube_urls)
+            if attachments[0]['service_name'] == 'YouTube':
+                urls = attachments[0]['from_url']
+                youtube_urls.extend(urls)
     return youtube_urls
             
 
 class Events(APIView):
     def post(self, request, *args, **kwargs):
+        if not request.data.get("event", {}).get("attachments"):
+            slack_message = request.data
 
-        slack_message = request.data
+            if slack_message.get('token') != SLACK_VERIFICATION_TOKEN:
+                return Response(status=status.HTTP_403_FORBIDDEN)
 
-        if slack_message.get('token') != SLACK_VERIFICATION_TOKEN:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        # verification challenge
-        if slack_message.get('type') == 'url_verification':
-            return Response(data=slack_message,
-                            status=status.HTTP_200_OK)
-        # greet bot
-        if 'event' in slack_message:                              #4
-            event_message = slack_message.get('event')            #
-            
-            # ignore bot's own message
-            if event_message.get('subtype') == 'bot_message':     #5
-                return Response(status=status.HTTP_200_OK)        #
-            
-            # process user's message
-            # print(event_message)
-            user = event_message.get('user')                      #6
-            # text = event_message.get('text')                      #
-            channel = event_message.get('channel')                #
-            bot_text = 'Hi :wave: Youtube links added to the jukebox playlist.'            #
-            youtube_urls = get_youtube_link(event_message)
-            for url in youtube_urls:
-                try:
-                    song = Songs(YoutubeLink=url, SongName=str(url))
+            # verification challenge
+            if slack_message.get('type') == 'url_verification':
+                return Response(data=slack_message,
+                                status=status.HTTP_200_OK)
+            # greet bot
+            if 'event' in slack_message:                              #4
+                event_message = slack_message.get('event')            #
+                
+                # ignore bot's own message
+                if event_message.get('subtype') == 'bot_message':     #5
+                    return Response(status=status.HTTP_200_OK)        #
+                
+                # process user's message
+                # print(event_message)
+                user = event_message.get('user')                      #6
+                # text = event_message.get('text')                      #
+                channel = event_message.get('channel')                #
+                bot_text = 'Hi :wave: Youtube links added to the jukebox playlist.'            #
+                youtube_url = "".join(get_youtube_link(event_message))
+                if "youtube.com" in youtube_url and not Songs.objects.filter(YoutubeLink=youtube_url).exists():
+                    song = Songs(YoutubeLink=youtube_url, SongName=str(youtube_url))
                     song.save()
-                except:
-                    pass
-                    # bot_text = 'Hi  :wave: Youtube link is already there in jukebox.'
-            if youtube_urls:                
-                Client.api_call(method='chat.postMessage',        #8
-                                channel=channel,                  #
-                                text=bot_text)                    #
-                return Response(status=status.HTTP_200_OK)        #9
+                    Client.api_call(method='chat.postMessage',        #8
+                                    channel=channel,                  #
+                                    text=bot_text)                    #
+                    return Response(status=status.HTTP_200_OK)        #9
 
         return Response(status=status.HTTP_200_OK)
